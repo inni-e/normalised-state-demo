@@ -4,7 +4,7 @@ import { StreamChunkType } from "@/types/chat-stream";
 /**
  * Helper function to split text into small streaming chunks
  */
-function splitIntoChunks(text: string, chunkSize = 10): string[] {
+function splitIntoChunks(text: string, chunkSize = 3): string[] {
   const chunks: string[] = [];
   let currentChunk = "";
 
@@ -46,7 +46,7 @@ function createArtifactChunks(
   language = "markdown",
 ): StreamChunk[] {
   const chunks: StreamChunk[] = [];
-  const chunkSize = 80; // Character per chunk
+  const chunkSize = 3; // Character per chunk
 
   let remainingText = text;
 
