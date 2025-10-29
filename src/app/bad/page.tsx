@@ -16,6 +16,9 @@ export default function BadPage() {
 
   const prevArtifactIdRef = useRef<string | null>(null);
 
+  // Ref for auto-scroll
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
   const handleArtifactClick = (artifact: Artifact) => {
     setSelectedArtifact(artifact);
     setIsPanelOpen(true);
@@ -74,11 +77,21 @@ export default function BadPage() {
     }
   }, [currentArtifact, isPanelOpen]);
 
+  // Auto-scroll when streaming
+  useEffect(() => {
+    if (isStreaming && messagesContainerRef.current) {
+      messagesContainerRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }
+  }, [isStreaming, rawStream]);
+
   return (
     <>
       <main className="flex h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         {/* Main Content Area */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto min-h-screen max-w-4xl px-4 py-8">
             {/* Header */}
             <div className="mb-8 text-center">
@@ -158,7 +171,7 @@ export default function BadPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="space-y-4">
+            <div ref={messagesContainerRef} className="space-y-4">
               <BadStreamedMessage
                 rawStream={rawStream}
                 onArtifactClick={handleArtifactClick}

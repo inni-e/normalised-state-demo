@@ -20,6 +20,9 @@ export default function HomePage() {
   // Track the previous artifact ID to detect new artifacts
   const prevArtifactIdRef = useRef<string | null>(null);
 
+  // Ref for auto-scroll
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
   const handleArtifactClick = (artifact: Artifact) => {
     setSelectedArtifact(artifact);
     setIsPanelOpen(true);
@@ -54,11 +57,21 @@ export default function HomePage() {
     }
   }, [currentArtifact, currentArtifactId, isPanelOpen]);
 
+  // Auto-scroll when streaming
+  useEffect(() => {
+    if (isStreamingResponse && messagesContainerRef.current) {
+      messagesContainerRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }
+  }, [isStreamingResponse, streamingState]);
+
   return (
     <>
       <main className="flex h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         {/* Main Content Area */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto max-w-4xl px-4 py-8">
             {/* Header */}
             <div className="mb-8 text-center">
@@ -133,7 +146,7 @@ export default function HomePage() {
             </div>
 
             {/* Messages Area */}
-            <div className="space-y-4">
+            <div ref={messagesContainerRef} className="space-y-4">
               <StreamedMessage onArtifactClick={handleArtifactClick} />
             </div>
           </div>
