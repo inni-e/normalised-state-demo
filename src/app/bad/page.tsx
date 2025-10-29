@@ -1,22 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import StreamedMessage from "@/components/StreamedMessage";
-import ArtifactPanel from "@/components/artifact/ArtifactPanel";
 import type { Artifact } from "@/types/chat-stream";
-import { useSimulatedStream } from "@/hooks/use-simulated-stream";
-import { useChatStreamStore } from "@/lib/store/chat-stream-store";
+import { useBadStream } from "@/hooks/use-bad-stream";
+import BadStreamedMessage from "@/components/bad/BadStreamedMessage";
+import BadArtifactPanel from "@/components/bad/BadArtifactPanel";
 
-export default function HomePage() {
+export default function BadPage() {
   const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(
     null,
   );
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const { startSimulation } = useSimulatedStream();
-  const { isStreamingResponse, streamingState, currentArtifactId } =
-    useChatStreamStore();
+  const { rawStream, isStreaming, startSimulation } = useBadStream();
 
-  // Track the previous artifact ID to detect new artifacts
   const prevArtifactIdRef = useRef<string | null>(null);
 
   const handleArtifactClick = (artifact: Artifact) => {
@@ -28,30 +24,53 @@ export default function HomePage() {
     void startSimulation();
   };
 
-  // Get current artifact from store
-  const currentArtifact = currentArtifactId
-    ? streamingState.artifactsById[currentArtifactId]
-    : null;
+  // Extract current artifact from raw stream
+  // Bad practice: parsing on every render
+  const extractCurrentArtifact = () => {
+    if (!rawStream) return null;
+
+    const artifactMatch = rawStream.match(
+      /<artifact[^>]*language="([^"]*)"[^>]*>(.*?)<\/artifact>/s,
+    );
+    if (!artifactMatch) return null;
+
+    // Find last artifact ID from the stream
+    const allArtifacts = [
+      ...rawStream.matchAll(/<artifact[^>]*>(.*?)<\/artifact>/gs),
+    ];
+    if (allArtifacts.length === 0) return null;
+
+    const lastArtifact = allArtifacts[allArtifacts.length - 1];
+    if (!lastArtifact) return null;
+
+    const attrs =
+      rawStream.match(/<artifact[^>]*language="([^"]*)"[^>]*>/) ?? [];
+    const language = attrs[1] ?? "markdown";
+
+    return {
+      id: crypto.randomUUID(),
+      text: lastArtifact[1] ?? "",
+      language,
+    };
+  };
+
+  const currentArtifact = extractCurrentArtifact();
 
   // Keep selectedArtifact in sync with currentArtifact and auto-open panel
   useEffect(() => {
     if (currentArtifact) {
-      // Always update selected artifact when current artifact changes (handles text updates)
       setSelectedArtifact(currentArtifact);
 
-      // Only auto-open if this is a NEW artifact (different ID than before)
-      const isNewArtifact = currentArtifactId !== prevArtifactIdRef.current;
+      const isNewArtifact = currentArtifact.id !== prevArtifactIdRef.current;
       if (isNewArtifact && !isPanelOpen) {
         setIsPanelOpen(true);
       }
 
-      // Update the previous ID
-      prevArtifactIdRef.current = currentArtifactId;
+      prevArtifactIdRef.current = currentArtifact.id;
     } else {
-      // No artifact, reset the ref
       prevArtifactIdRef.current = null;
     }
-  }, [currentArtifact, currentArtifactId, isPanelOpen]);
+  }, [currentArtifact, isPanelOpen]);
 
   return (
     <>
@@ -61,11 +80,16 @@ export default function HomePage() {
           <div className="mx-auto max-w-4xl px-4 py-8">
             {/* Header */}
             <div className="mb-8 text-center">
-              <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-white">
-                Normalized State Demo
+              <h1 className="mb-2 text-4xl font-bold text-red-900 dark:text-red-100">
+                Bad XML Stream Implementation
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Showcasing type-safe streaming with normalized state management
+              <p className="text-red-600 dark:text-red-400">
+                ⚠️ Warning: This is a bad approach - streams are raw XML strings
+                parsed on every render
+              </p>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                No normalized state - components inferred from XML tags in a
+                single string
               </p>
             </div>
 
@@ -75,7 +99,7 @@ export default function HomePage() {
                 href="/"
                 className="rounded-lg bg-purple-600 px-6 py-2 font-medium text-white transition-all hover:bg-purple-700 hover:shadow-lg"
               >
-                Good Implementation
+                ← Good Implementation
               </a>
               <a
                 href="/bad"
@@ -93,10 +117,10 @@ export default function HomePage() {
               <div className="flex gap-4">
                 <button
                   onClick={handleSendMessage}
-                  disabled={isStreamingResponse}
-                  className="rounded-lg bg-linear-to-r from-purple-600 to-pink-600 px-6 py-3 font-medium text-white shadow-lg transition-all hover:from-purple-700 hover:to-pink-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:from-purple-600 disabled:hover:to-pink-600"
+                  disabled={isStreaming}
+                  className="rounded-lg bg-linear-to-r from-red-600 to-orange-600 px-6 py-3 font-medium text-white shadow-lg transition-all hover:from-red-700 hover:to-orange-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:from-red-600 disabled:hover:to-orange-600"
                 >
-                  {isStreamingResponse ? (
+                  {isStreaming ? (
                     <span className="flex items-center gap-2">
                       <svg
                         className="h-5 w-5 animate-spin"
@@ -126,20 +150,23 @@ export default function HomePage() {
                 </button>
               </div>
               <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-                Click the button above to simulate a streaming response with
-                various chunk types
+                This simulates streaming by appending XML strings to a single
+                buffer
               </p>
             </div>
 
             {/* Messages Area */}
             <div className="space-y-4">
-              <StreamedMessage onArtifactClick={handleArtifactClick} />
+              <BadStreamedMessage
+                rawStream={rawStream}
+                onArtifactClick={handleArtifactClick}
+              />
             </div>
           </div>
         </div>
 
         {/* Artifact Panel */}
-        <ArtifactPanel
+        <BadArtifactPanel
           artifact={selectedArtifact}
           isOpen={isPanelOpen}
           onClose={() => setIsPanelOpen(false)}
