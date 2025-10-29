@@ -56,9 +56,9 @@ export default function HomePage() {
 
   return (
     <>
-      <main className="flex min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <main className="flex h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         {/* Main Content Area */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="mx-auto max-w-4xl px-4 py-8">
             {/* Header */}
             <div className="mb-8 text-center">
