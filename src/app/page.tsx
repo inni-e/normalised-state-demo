@@ -6,6 +6,7 @@ import ArtifactPanel from "@/components/artifact/ArtifactPanel";
 import type { Artifact } from "@/types/chat-stream";
 import { useSimulatedStream } from "@/hooks/use-simulated-stream";
 import { useChatStreamStore } from "@/lib/store/chat-stream-store";
+import Link from "next/link";
 
 export default function HomePage() {
   const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(
@@ -71,12 +72,12 @@ export default function HomePage() {
 
             {/* Navigation */}
             <div className="mb-6 flex justify-center gap-4">
-              <a
+              <Link
                 href="/"
                 className="rounded-lg bg-purple-600 px-6 py-2 font-medium text-white transition-all hover:bg-purple-700 hover:shadow-lg"
               >
                 Good Implementation
-              </a>
+              </Link>
               <a
                 href="/bad"
                 className="rounded-lg bg-red-600 px-6 py-2 font-medium text-white transition-all hover:bg-red-700 hover:shadow-lg"
