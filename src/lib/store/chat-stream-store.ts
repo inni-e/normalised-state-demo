@@ -21,6 +21,7 @@ interface ChatStreamStore {
   streamingState: ChatState;
   thinkingState: ThinkingState;
   isStreamingResponse: boolean;
+  currentArtifactId: string | null;
   setStreamingState: (
     state: ChatState | ((prev: ChatState) => ChatState),
   ) => void;
@@ -28,6 +29,7 @@ interface ChatStreamStore {
     state: ThinkingState | ((prev: ThinkingState) => ThinkingState),
   ) => void;
   setIsStreamingResponse: (isStreaming: boolean) => void;
+  setCurrentArtifactId: (id: string | null) => void;
   resetStates: () => void;
 }
 
@@ -35,6 +37,7 @@ export const useChatStreamStore = create<ChatStreamStore>((set) => ({
   streamingState: createEmptyChatState(),
   thinkingState: createEmptyThinkingState(),
   isStreamingResponse: false,
+  currentArtifactId: null,
 
   setStreamingState: (state) =>
     set((store) => ({
@@ -51,10 +54,13 @@ export const useChatStreamStore = create<ChatStreamStore>((set) => ({
   setIsStreamingResponse: (isStreaming) =>
     set({ isStreamingResponse: isStreaming }),
 
+  setCurrentArtifactId: (id) => set({ currentArtifactId: id }),
+
   resetStates: () =>
     set({
       streamingState: createEmptyChatState(),
       thinkingState: createEmptyThinkingState(),
       isStreamingResponse: false,
+      currentArtifactId: null,
     }),
 }));

@@ -39,6 +39,32 @@ function createMessageChunks(text: string): MessageChunk[] {
 }
 
 /**
+ * Helper function to create artifact chunks from text
+ */
+function createArtifactChunks(
+  text: string,
+  language = "markdown",
+): StreamChunk[] {
+  const chunks: StreamChunk[] = [];
+  const chunkSize = 80; // Character per chunk
+
+  let remainingText = text;
+
+  while (remainingText.length > 0) {
+    const chunkText = remainingText.substring(0, chunkSize);
+    remainingText = remainingText.substring(chunkSize);
+
+    chunks.push({
+      type: StreamChunkType.ARTIFACT,
+      text: chunkText,
+      language,
+    });
+  }
+
+  return chunks;
+}
+
+/**
  * Comprehensive mock stream data simulating various AI assistant scenarios
  */
 export const MOCK_STREAM_SCENARIOS = {
@@ -111,9 +137,8 @@ export const MOCK_STREAM_SCENARIOS = {
     ...createMessageChunks(
       "The zoning ordinance requires specific setbacks and height restrictions. Here's what you need to know:",
     ),
-    {
-      type: StreamChunkType.ARTIFACT,
-      text: `# Zoning Requirements Summary
+    ...createArtifactChunks(
+      `# Zoning Requirements Summary
 
 ## Residential Zones (R-1)
 - Minimum lot size: 5,000 sq ft
@@ -131,8 +156,7 @@ export const MOCK_STREAM_SCENARIOS = {
 - Multi-family: 1.5 spaces per unit
 
 For more details, please refer to the municipal code Section 17.20.`,
-      language: "markdown",
-    },
+    ),
     {
       type: StreamChunkType.CLARIFICATION,
       questions: [
@@ -196,9 +220,8 @@ For more details, please refer to the municipal code Section 17.20.`,
     ...createMessageChunks(
       "Based on the city's records and regulations, here's what I found:",
     ),
-    {
-      type: StreamChunkType.ARTIFACT,
-      text: `# Code Enforcement Process
+    ...createArtifactChunks(
+      `# Code Enforcement Process
 
 ## Violation Notice Process
 1. Inspection identifies violation
@@ -215,8 +238,7 @@ For more details, please refer to the municipal code Section 17.20.`,
 
 ## Appeals
 You have the right to appeal any violation within 10 days of notice.`,
-      language: "markdown",
-    },
+    ),
     {
       type: StreamChunkType.CLARIFICATION,
       questions: [
@@ -287,9 +309,8 @@ You have the right to appeal any violation within 10 days of notice.`,
       "I've gathered information about business license requirements.",
     ),
     ...createMessageChunks("Here's what you need to know to get started:"),
-    {
-      type: StreamChunkType.ARTIFACT,
-      text: `# Business License Guide
+    ...createArtifactChunks(
+      `# Business License Guide
 
 ## Application Process
 1. Submit application online or in-person
@@ -309,8 +330,7 @@ You have the right to appeal any violation within 10 days of notice.`,
 - Restaurant: $250/year
 - Professional Services: $200/year
 - Home-based: $75/year`,
-      language: "markdown",
-    },
+    ),
     {
       type: StreamChunkType.CLARIFICATION,
       questions: [
@@ -375,9 +395,8 @@ You have the right to appeal any violation within 10 days of notice.`,
     ...createMessageChunks(
       "I found information about current public works projects.",
     ),
-    {
-      type: StreamChunkType.ARTIFACT,
-      text: `# Public Works Project Information
+    ...createArtifactChunks(
+      `# Public Works Project Information
 
 ## Active Projects
 
@@ -397,8 +416,7 @@ You have the right to appeal any violation within 10 days of notice.`,
 - Community meetings: First Thursday of each month
 - Updates: Available on city website
 - Questions: Call Public Works at extension 456`,
-      language: "markdown",
-    },
+    ),
     {
       type: StreamChunkType.CLARIFICATION,
       questions: [
@@ -463,9 +481,8 @@ You have the right to appeal any violation within 10 days of notice.`,
     ...createMessageChunks(
       "I've looked up information about our parks and recreation facilities.",
     ),
-    {
-      type: StreamChunkType.ARTIFACT,
-      text: `# Parks & Recreation Facilities
+    ...createArtifactChunks(
+      `# Parks & Recreation Facilities
 
 ## Community Centers
 
@@ -490,8 +507,7 @@ You have the right to appeal any violation within 10 days of notice.`,
 - Youth sports leagues (Spring registration open)
 - Senior fitness classes (M/W/F mornings)
 - Swim lessons (Year-round availability)`,
-      language: "markdown",
-    },
+    ),
     {
       type: StreamChunkType.CLARIFICATION,
       questions: [

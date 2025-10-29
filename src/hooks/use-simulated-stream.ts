@@ -9,8 +9,12 @@ import {
 import { getRandomScenario } from "@/lib/mock-stream-data";
 
 export function useSimulatedStream() {
-  const { setStreamingState, setThinkingState, setIsStreamingResponse } =
-    useChatStreamStore();
+  const {
+    setStreamingState,
+    setThinkingState,
+    setIsStreamingResponse,
+    setCurrentArtifactId,
+  } = useChatStreamStore();
 
   const createNewSection = (
     type: RenderSection["type"],
@@ -250,7 +254,36 @@ export function useSimulatedStream() {
 
         case StreamChunkType.ARTIFACT: {
           setStreamingState((prev) => {
+            const lastSection =
+              prev.renderSections[prev.renderSections.length - 1];
+            const lastSectionIsArtifact =
+              lastSection?.type === StreamChunkType.ARTIFACT;
+
+            // Try appending to the last artifact
+            if (lastSectionIsArtifact && lastSection.refId) {
+              const lastArtifactId = lastSection.refId;
+              const lastArtifact = prev.artifactsById[lastArtifactId];
+
+              if (lastArtifact) {
+                return {
+                  ...prev,
+                  artifactsById: {
+                    ...prev.artifactsById,
+                    [lastArtifactId]: {
+                      ...lastArtifact,
+                      text: lastArtifact.text + chunk.text,
+                    },
+                  },
+                };
+              }
+            }
+
+            // Create new artifact
             const newId = crypto.randomUUID();
+            // Set as current artifact in next tick to avoid state update conflict
+            void Promise.resolve().then(() => {
+              setCurrentArtifactId(newId);
+            });
             return {
               ...prev,
               artifactsById: {
@@ -319,7 +352,12 @@ export function useSimulatedStream() {
         }
       }
     },
-    [setStreamingState, setThinkingState, setIsStreamingResponse],
+    [
+      setStreamingState,
+      setThinkingState,
+      setIsStreamingResponse,
+      setCurrentArtifactId,
+    ],
   );
 
   const startSimulation = useCallback(async () => {
@@ -327,6 +365,7 @@ export function useSimulatedStream() {
     setStreamingState(createEmptyChatState());
     setThinkingState(createEmptyThinkingState());
     setIsStreamingResponse(true);
+    setCurrentArtifactId(null);
 
     // Get chunks from external data - use random scenario for demo
     const chunks = getRandomScenario();
@@ -343,6 +382,7 @@ export function useSimulatedStream() {
     setStreamingState,
     setThinkingState,
     setIsStreamingResponse,
+    setCurrentArtifactId,
   ]);
 
   return { startSimulation };
