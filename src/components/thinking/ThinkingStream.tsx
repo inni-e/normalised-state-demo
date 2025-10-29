@@ -3,13 +3,26 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useChatStreamStore } from "@/lib/store/chat-stream-store";
 import { StreamChunkType } from "@/types/chat-stream";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function ThinkingStream() {
   const { thinkingState } = useChatStreamStore();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(),
+    new Set(thinkingState.renderSections.map((section) => section.id)),
   );
+
+  // Expand new sections as they stream in
+  useEffect(() => {
+    setExpandedSections((prev) => {
+      const newSet = new Set(prev);
+      thinkingState.renderSections.forEach((section) => {
+        if (!prev.has(section.id)) {
+          newSet.add(section.id);
+        }
+      });
+      return newSet;
+    });
+  }, [thinkingState.renderSections]);
 
   const toggleSection = (id: string) => {
     setExpandedSections((prev) => {
