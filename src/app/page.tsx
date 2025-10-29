@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import StreamedMessage from "@/components/StreamedMessage";
 import ArtifactPanel from "@/components/artifact/ArtifactPanel";
 import type { Artifact } from "@/types/chat-stream";
@@ -16,6 +16,9 @@ export default function HomePage() {
   const { isStreamingResponse, streamingState, currentArtifactId } =
     useChatStreamStore();
 
+  // Track the previous artifact ID to detect new artifacts
+  const prevArtifactIdRef = useRef<string | null>(null);
+
   const handleArtifactClick = (artifact: Artifact) => {
     setSelectedArtifact(artifact);
     setIsPanelOpen(true);
@@ -25,15 +28,30 @@ export default function HomePage() {
     void startSimulation();
   };
 
-  // Auto-open artifact panel when artifact starts streaming
+  // Get current artifact from store
   const currentArtifact = currentArtifactId
     ? streamingState.artifactsById[currentArtifactId]
     : null;
 
-  if (!isPanelOpen && currentArtifact) {
-    setSelectedArtifact(currentArtifact);
-    setIsPanelOpen(true);
-  }
+  // Keep selectedArtifact in sync with currentArtifact and auto-open panel
+  useEffect(() => {
+    if (currentArtifact) {
+      // Always update selected artifact when current artifact changes (handles text updates)
+      setSelectedArtifact(currentArtifact);
+
+      // Only auto-open if this is a NEW artifact (different ID than before)
+      const isNewArtifact = currentArtifactId !== prevArtifactIdRef.current;
+      if (isNewArtifact && !isPanelOpen) {
+        setIsPanelOpen(true);
+      }
+
+      // Update the previous ID
+      prevArtifactIdRef.current = currentArtifactId;
+    } else {
+      // No artifact, reset the ref
+      prevArtifactIdRef.current = null;
+    }
+  }, [currentArtifact, currentArtifactId, isPanelOpen]);
 
   return (
     <>
