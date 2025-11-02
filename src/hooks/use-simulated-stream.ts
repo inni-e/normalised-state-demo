@@ -373,7 +373,10 @@ export function useSimulatedStream() {
     // Stream chunks with realistic delays
     for (const chunk of chunks) {
       await new Promise((resolve) => {
-        if (chunk.type === StreamChunkType.MESSAGE || chunk.type === StreamChunkType.ARTIFACT) {
+        if (
+          chunk.type === StreamChunkType.MESSAGE ||
+          chunk.type === StreamChunkType.ARTIFACT
+        ) {
           setTimeout(resolve, 20 + Math.random() * 20);
         } else {
           setTimeout(resolve, 500 + Math.random() * 1000);
